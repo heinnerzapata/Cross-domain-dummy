@@ -1,5 +1,4 @@
 var $btnShowAlert = document.getElementById('btnShowAlert');
-var $originDomain = 'http://localhost:3000';
 var $dataContainer = document.getElementById('txtReceived');
 
 var $listenerActive = document.getElementById('listener-active');
@@ -15,15 +14,6 @@ var $btnSend = document.getElementById('btnSend');
 var isListening = false;
 var data = {};
 var confirmation = false;
-
-initData = () => {
-  $listenerNoActive.classList.add('is-visible');
-  $listenerStatus.innerHTML = 'Not listening';
-  $btnListen.disabled = true;
-  $btnSend.disabled = true;
-};
-
-initData();
 
 $btnListen.addEventListener('click', () => {
   isListening = !isListening;
@@ -48,18 +38,34 @@ $txtTarget.addEventListener('keypress', handleTargetChange);
 $txtTarget.addEventListener('change', handleTargetChange);
 
 handleMessageListener = (event) => {
-  if(event.origin !== $originDomain) return;
-  
-  console.log('received data: ',  event.data, ' from ', event.origin);
-  console.log('-----------------------------------------');
-  console.log('sending confirmation to', event.origin);
-  
+  if(event.origin !== $txtTarget.value) return;
+  setMessageHandlerConfig();
   event.source.postMessage('CONFIRM_RESPONSE',event.origin)
   data = JSON.parse(event.data);
   $dataContainer.innerHTML= JSON.stringify(data);
 };
 
 listenMessages = () => {
+  setListenConfig();
+  window.addEventListener('message',function(event) {
+    this.handleMessageListener(event);
+  },false);
+};
+
+notListenMessages = () => {
+  setNotListenConfig();
+  window.removeEventListener('message',function(event) {
+    this.handleMessageListener(event);
+  });
+};
+
+setMessageHandlerConfig = () => {
+  console.log('received data: ',  event.data, ' from ', event.origin);
+  console.log('-----------------------------------------');
+  console.log('sending confirmation to', event.origin);
+};
+
+setListenConfig = () => {
   console.log('listening..');
   $listenerActive.classList.add('is-visible');
   $listenerNoActive.classList.remove('is-visible');
@@ -67,12 +73,9 @@ listenMessages = () => {
   $btnListen.innerHTML = 'stop';
   $txtTarget.disabled = true;
   $btnSend.disabled = false;
-  window.addEventListener('message',function(event) {
-    this.handleMessageListener(event);
-  },false);
-};
+}
 
-notListenMessages = () => {
+setNotListenConfig = () => {
   console.log('not listening..');
   $listenerNoActive.classList.add('is-visible');
   $listenerActive.classList.remove('is-visible');
@@ -80,8 +83,13 @@ notListenMessages = () => {
   $btnListen.innerHTML = 'listen';
   $txtTarget.disabled = false;
   $btnSend.disabled = true;
-  window.removeEventListener('message',function(event) {
-    this.handleMessageListener(event);
-  });
 };
 
+setInitConfig = () => {
+  $listenerNoActive.classList.add('is-visible');
+  $listenerStatus.innerHTML = 'Not listening';
+  $btnListen.disabled = true;
+  $btnSend.disabled = true;
+}; 
+
+setInitConfig();
