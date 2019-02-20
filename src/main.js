@@ -11,9 +11,15 @@ var $btnListen = document.getElementById('btnListen');
 var $txtTarget =  document.getElementById('txtTarget');
 var $btnSend = document.getElementById('btnSend');
 
+var $txtOption = document.getElementById('txtOption');
+var $txtForSend = document.getElementById('txtForSend');
+
 var isListening = false;
 var data = {};
 var confirmation = false;
+var windowReference;
+var windowConfig = 'menubar=yes,location=yes,resizable=yes,scrollbars=yes,status=yes';
+let postInterval
 
 $btnListen.addEventListener('click', () => {
   isListening = !isListening;
@@ -22,6 +28,20 @@ $btnListen.addEventListener('click', () => {
   }else {
     notListenMessages();
   }
+});
+
+btnSend.addEventListener('click', () => {
+   // once message is defined just open a new window but creating a variable to keep window reference for post message
+   windowReference = window.open(
+    $txtTarget.value + $txtOption.value,
+    '',
+    windowConfig
+  );
+
+  // interval to retry until objetive domain response with confirmation message
+  postInterval = setInterval(() => {
+    windowReference.postMessage($txtForSend.value, $txtTarget.value);
+  }, 500);
 });
 
 handleTargetChange = (event) => {
@@ -40,9 +60,15 @@ $txtTarget.addEventListener('change', handleTargetChange);
 handleMessageListener = (event) => {
   if(event.origin !== $txtTarget.value) return;
   setMessageHandlerConfig();
-  event.source.postMessage('CONFIRM_RESPONSE',event.origin)
+  event.source.postMessage('CONFIRM_RECEIVED',event.origin)
   data = JSON.parse(event.data);
-  $dataContainer.innerHTML= JSON.stringify(data);
+  $dataContainer.innerHTML += '\n-----------------------------------\n' + JSON.stringify(data);
+  console.log(event.data);
+
+  // stop interval on comfirm received
+  if(postInterval && event.value === 'CONFIRM_RECEIVED') {
+    clearInterval(postInterval);
+  }
 };
 
 listenMessages = () => {
