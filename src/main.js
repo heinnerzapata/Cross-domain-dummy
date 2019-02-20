@@ -59,16 +59,22 @@ $txtTarget.addEventListener('change', handleTargetChange);
 
 handleMessageListener = (event) => {
   if(event.origin !== $txtTarget.value) return;
-  setMessageHandlerConfig();
-  event.source.postMessage('CONFIRM_RECEIVED',event.origin)
+
   data = JSON.parse(event.data);
-  $dataContainer.innerHTML += '\n-----------------------------------\n' + JSON.stringify(data);
+  setMessageHandlerConfig();
+ 
+  // stop interval on comfirm received
+  if(postInterval && JSON.parse(event.data).eventType === 'ConfirmReceived') {
+    clearInterval(postInterval);
+    $dataContainer.innerHTML = JSON.stringify(data) + '\n-----------------------------------\n';
+  } else if(JSON.parse(event.data).eventType === 'ReachCustomizationProjectCreated' ) {
+    $dataContainer.innerHTML += JSON.stringify(data);
+  } else {
+    event.source.postMessage('ConfirmReceived',event.origin)
+  }
+
   console.log(event.data);
 
-  // stop interval on comfirm received
-  if(postInterval && event.value === 'CONFIRM_RECEIVED') {
-    clearInterval(postInterval);
-  }
 };
 
 listenMessages = () => {
